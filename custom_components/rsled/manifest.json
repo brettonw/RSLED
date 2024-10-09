@@ -1,0 +1,15 @@
+{
+  "domain": "rsled",
+  "name": "Red Sea ReefLED",
+  "codeowners": ["@brettonw"],
+  "config_flow": true,
+  "dependencies" : [],
+  "documentation": "https://github.com/brettonw/RSLED",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/brettonw/RSLED/issues",
+  "requirements": [],
+  "ssdp": [],
+  "version": "1.0.0",
+  "zeroconf": [{"type": "_http._tcp.local.", "properties": {"hw_model": "RSLED*"}}]
+}
