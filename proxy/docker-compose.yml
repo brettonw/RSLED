@@ -1,0 +1,16 @@
+services:
+  mitmweb:
+    image: mitmproxy/mitmproxy
+    tty: true
+    ports:
+      - 8080:8080
+      - 8081:8081
+    command: mitmweb --web-host 0.0.0.0
+    restart: always
+
+  mitmdump:
+    image: mitmproxy/mitmproxy
+    command: mitmdump -nC /home/mitmproxy/flows
+    volumes:
+      - ./mitmproxy:/home/mitmproxy/
+    restart: always

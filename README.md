@@ -4,42 +4,26 @@ This is a Home Assistant integration for controlling [Red Sea ReefLED lights](ht
 ## introduction
 Each RSLED unit includes a 23,000 Kelvin "REEF-SPEC" blue light, a 9,000 Kelvin white light, and a moon light.
 
+<img src="img/ReefLED50.png">
+<img src="img/ReefLED90.png">
+<img src="img/ReefLED160.png">
 
 ## finding the endpoints
-I configured a mitmproxy/mitmdump on a docker container and pointed my iphone at it. My docker-compose file:
+I configured a web proxy using mitmproxy/mitmdump on a docker container and pointed my iphone at it. See the `proxy/docker-compose.yml` file for details of the proxy deployment.
 
-```
-services:
-  mitmweb:
-    image: mitmproxy/mitmproxy
-    tty: true
-    ports:
-      - 8080:8080
-      - 8081:8081
-    command: mitmweb --web-host 0.0.0.0
-    restart: always
+Once the proxy was up and running, I followed the directions at https://blog.sayan.page/mitm-proxy-on-ios/, which I summarize here for my iPhone:
 
-  mitmdump:
-    image: mitmproxy/mitmproxy
-    command: mitmdump -nC /home/mitmproxy/flows
-    volumes:
-      - ./mitmproxy:/home/mitmproxy/
-    restart: always
-```
-
-Once the proxy is up and running (I followed these directions at https://blog.sayan.page/mitm-proxy-on-ios/):
-
-* Settings > WiFi and then tap on the (i) icon beside the network your are connected to.
+* Select Settings -> WiFi and then tap on the (i) icon beside the network you are connected to.
 
 * Scroll down to the bottom and tap on “Configure Proxy”.
 
-* Select Manual, put the proxy server IP and port ("yourproxyhost:8080"), and save.
+* Select Manual, enter the proxy server IP and port ("yourproxyhost:8080"), and save.
 
-* Open Safari on the iOS device and open [mitm.it](https://mitm.it). Choose the CA certificates for your phone and follow the directions.
+* Use Safari on the phone and open [mitm.it](https://mitm.it). Choose the CA certificates for your phone and follow the directions.
 
 * In settings, a "downloaded profiles" option appears at the root level. Click into the option and install the profile.
 
-* Go to Settings > General > About and scroll down to the bottom of the page. You will see a menu item titled “Certificate Trust Settings”. Tap on it and enable the certificate for "mitmproxy" in the following page.
+* Go to Settings -> General -> About and scroll down to the bottom of the page. You will see a menu item titled “Certificate Trust Settings”. Tap on it and enable the certificate for "mitmproxy" in the following page.
 
 * Open the proxy service site at http://yourproxyhost:8081, you'll see the UI.
 
