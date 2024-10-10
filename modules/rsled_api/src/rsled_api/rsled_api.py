@@ -118,6 +118,27 @@ class RsLedApi:
         self._set_state_values({BLUE: 0, WHITE: 0, MOON: 0}, MANUAL)
 
     @property
+    def brightness(self) -> int:
+        # the brightest of blue and white is the current brightness
+        return max(self.blue, self.white)
+
+    def _normalized_bw(self, brightness: int = 100) -> list[int]:
+        # normalizes the blue/white components to the target brightness. valid brightness and blue/
+        # white values are [0..100], so the scale is performed in integer space (just leave the
+        # parenthesis where they are to ensure order of operation)
+        return [int(((x * brightness) / self.brightness) + 0.5) for x in [self.blue, self.white]]
+
+    def set_brightness(self, brightness: int):
+        # set the blue/white components to the requested brightness setting
+        y = self._normalized_bw(brightness)
+        self._set_state_values({BLUE: y[0], WHITE: y[1]}, MANUAL)
+
+    def normalize(self):
+        # set the blue/white components to the brightest possible setting that maintains the color
+        y = self._normalized_bw()
+        self._set_state_values({BLUE: y[0], WHITE: y[1]}, MANUAL)
+
+    @property
     def color_temperature(self) -> int:
         # compute a normalized color, so one of the blue or white values is saturated
         max_value = max(self.blue, self.white)
@@ -126,8 +147,12 @@ class RsLedApi:
 
         # search the color tables for the best match in blue and white, whichever is more precise
         if y[0] == 100:
-            # search on y[1] for the most precise
-            pass
+            if y[1] == 100:
+                # find the inflection point
+                pass
+            else:
+                # search on y[1] for the most precise lookup
+                pass
         else:  # y[1] == 100
             assert y[1] == 100
             # search on y[0] for the most precise lookup

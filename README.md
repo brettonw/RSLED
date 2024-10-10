@@ -4,15 +4,16 @@
 This is a Home Assistant integration for controlling [Red Sea ReefLED lights](https://g1.redseafish.com/hardware/lighting/).
 
 ## introduction
-Each RSLED unit includes a 23,000 Kelvin "REEF-SPEC" blue light, a 9,000 Kelvin white light, and a moon light.
+Each ReefLED unit includes a "REEF-SPEC" blue light (a proprietary mix of blue LEDs yielding about 23k or 24k Kelvin), a 9k Kelvin white light, and a moon light.
 
 <img src="img/ReefLED50.png">
 <img src="img/ReefLED90.png">
 <img src="img/ReefLED160.png">
 
 ## endpoints
-
 I used the [proxy](proxy) while performing manual settings in the app for my RSLED90 lights. I observed the following command endpoints available through HTTP (when you send the given payload in the POST body):
+### DEVICE_INFO
+
 
 ### MANUAL
 This sets the lights to the requested color. The lights stay that color until the mode call is issued. It returns the same structure with two additional values: fan and temperature - but does not seem to respond to trying to set either of them (i.e. you can't turn the fan on and off). The light color parameters are a value between 0 and 100.
