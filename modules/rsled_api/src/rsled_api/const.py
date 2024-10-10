@@ -1,0 +1,7 @@
+BLUE = "blue"
+WHITE = "white"
+MOON = "moon"
+AUTO = "auto"
+MANUAL = "manual"
+MODE = "mode"
+HW_MODEL = "hw_model"

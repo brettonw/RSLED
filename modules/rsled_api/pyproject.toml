@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsled_api"
+version = "1.0.0"
+description = "Python API for Red Sea ReefLED lights"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [ {name = "Bretton Wade", email = "bretton.wade@gmail.com" } ]
+maintainers = [ {name = "Bretton Wade", email = "bretton.wade@gmail.com" } ]
+dependencies = []
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["home assistant", "red sea", "rsled", "reefled"]
+
+[project.urls]
+"Homepage" = "https://github.com/brettonw/RSLED"
+#"Bug Reports" = "https://github.com/pypa/sampleproject/issues"
+#"Funding" = "https://donate.pypi.org"
+#"Say Thanks!" = "http://saythanks.io/to/example"
+#"Source" = "https://github.com/pypa/sampleproject/"
+
+[tool.setuptools]
+# if there are data files included in your packages that need to be installed, specify them here.
+# for instance:
+# package-data = {"sample" = ["*.dat"]}
+
+[project.optional-dependencies]
+dev = ["pytest"]

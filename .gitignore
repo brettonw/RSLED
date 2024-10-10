@@ -163,3 +163,7 @@ cython_debug/
 
 # MacOS
 .DS_Store
+
+# IntelliJ doesn't ignore itself, apparently
+.idea
+*.iml

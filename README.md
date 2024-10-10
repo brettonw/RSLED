@@ -1,3 +1,5 @@
+<img src="img/logo.png">
+
 # RSLED
 This is a Home Assistant integration for controlling [Red Sea ReefLED lights](https://g1.redseafish.com/hardware/lighting/).
 
@@ -8,30 +10,9 @@ Each RSLED unit includes a 23,000 Kelvin "REEF-SPEC" blue light, a 9,000 Kelvin 
 <img src="img/ReefLED90.png">
 <img src="img/ReefLED160.png">
 
-## finding the endpoints
-I configured a web proxy using mitmproxy/mitmdump on a docker container and pointed my iphone at it. See the `proxy/docker-compose.yml` file for details of the proxy deployment.
+## endpoints
 
-Once the proxy was up and running, I followed the directions at https://blog.sayan.page/mitm-proxy-on-ios/, which I summarize here for my iPhone:
-
-* Select Settings -> WiFi and then tap on the (i) icon beside the network you are connected to.
-
-* Scroll down to the bottom and tap on “Configure Proxy”.
-
-* Select Manual, enter the proxy server IP and port ("yourproxyhost:8080"), and save.
-
-* Use Safari on the phone and open [mitm.it](https://mitm.it). Choose the CA certificates for your phone and follow the directions.
-
-* In settings, a "downloaded profiles" option appears at the root level. Click into the option and install the profile.
-
-* Go to Settings -> General -> About and scroll down to the bottom of the page. You will see a menu item titled “Certificate Trust Settings”. Tap on it and enable the certificate for "mitmproxy" in the following page.
-
-* Open the proxy service site at http://yourproxyhost:8081, you'll see the UI.
-
-* Open the Red Sea app, and proceed into the app to the Manual settings...
-
-## documenting the endpoints
-
-For my RSLED90 lights, I observed the following command endpoints through proxy using the manual setting in the app (when you send the given payload in the POST body):
+I used the [proxy](proxy) while performing manual settings in the app for my RSLED90 lights. I observed the following command endpoints available through HTTP (when you send the given payload in the POST body):
 
 ### MANUAL
 This sets the lights to the requested color. The lights stay that color until the mode call is issued. It returns the same structure with two additional values: fan and temperature - but does not seem to respond to trying to set either of them (i.e. you can't turn the fan on and off). The light color parameters are a value between 0 and 100.
@@ -84,19 +65,8 @@ curl -i -X POST -H 'Content-Type: application/json' -d '{"mode": "auto" }' http:
 curl -i -X POST -H 'Content-Type: application/json' -d '{"white": 100, "blue":50, "moon": 0, "duration": 1 }' http://xx.xx.xx.xx/timer
 ```
 
-## zeroconf
-RSLED lights show up in zeroconf queries like so:
-```
-add (RSLED90-xxxxxx)
-  address: xx.xx.xx.xx
-  host: rsled90-xxxxxx
-  properties:
-    hwid: xxxxxxxxxx
-    firmware_version: 2.1.1
-    hw_model: RSLED90
-    hw_type: reef-lights
-```
-The "hw_model" field is a reliable indicator of the device type, and the "hwid" field seems to be a unique identifier that can be used for autodiscovery within Home Assistant.
+## how to make an integration
+Start at the [HA docs](https://developers.home-assistant.io/docs/creating_component_index/). I find them to be a bit light on the details, so I am also taking a [model integration](https://github.com/msp1974/HAIntegrationExamples) from Mark Parker.
 
 ## disclaimer
 This is integration is not supported by or affiliated with Red Sea.
