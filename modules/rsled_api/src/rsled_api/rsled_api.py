@@ -44,7 +44,7 @@ class RsLedApi:
 
         # declare the state dictionary and update it
         self._state: dict[str, Any] = {}
-        device_info = self._get_endpoint("device-info")
+        device_info = self._get_endpoint(DEVICE_INFO)
         if device_info is not None:
             self._state[HW_MODEL] = device_info[HW_MODEL]
         self.update()
@@ -82,17 +82,22 @@ class RsLedApi:
             pass
         return None
 
-    def _set_state_values(self, values: dict[str, Any], endpoint: str, success_field: str, success_value: Any) -> None:
+    def _set_state_values(self, values: dict[str, Any], endpoint: str, success_field: str, success_value: Any) -> bool:
         state = {k: v for k, v in self._state.items() if k in fields_mask[endpoint]}
         state.update(values)
         result = self._set_endpoint(endpoint, state)
         if (result is not None) and (result[success_field] == success_value):
             self._state.update(state)
+            return True
         else:
             print(f"  failure, result: {result}")
+            return False
 
     def _set_state_values_manual(self, values: dict[str, Any]) -> None:
-        self._set_state_values(values, MANUAL, SUCCESS, True)
+        # in addition to setting the values, requested, a successful call should set the mode to
+        # MANUAL - this saves us having to update() from the device
+        if self._set_state_values(values, MANUAL, SUCCESS, True):
+            self._state[MODE] = MANUAL
 
     @property
     def hw_model(self) -> str:
