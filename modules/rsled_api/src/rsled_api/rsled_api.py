@@ -4,6 +4,8 @@ from .const import *
 from .interpolate import interpolate, XYPair
 from .utility import clamp
 
+# the different models have slightly different balance between the white and blue leds, so we just
+# use the tables Red Sea published on their website for the different color temperatures
 color_tables = {
     "RSLED50": [
         XYPair(9000, [0, 100]),
@@ -28,6 +30,13 @@ color_tables = {
     ]
 }
 
+# when posting messages to the different APIs, the lights are sensitive to extraneous fields. we use
+# these lists to dictate what fields are included in the posted request data.
+fields_mask = {
+    MANUAL: {BLUE, WHITE, MOON},
+    MODE: {MODE}
+}
+
 
 class RsLedApi:
     def __init__(self, host: str) -> None:
@@ -42,36 +51,48 @@ class RsLedApi:
 
     def _get_endpoint(self, endpoint: str) -> dict[str, Any] | None:
         try:
-            r = requests.get(f"http://{self.host}/{endpoint}", timeout=10)
-            if r.status_code == 200:
+            r = requests.get(f"http://{self.host}/{endpoint}")
+            # we take any "successful" response code in the range 200-299
+            status_code = int(r.status_code / 100)
+            if status_code == 2:
                 return r.json()
+            print(f"_get_endpoint failure: {status_code} {r.text}")
         except requests.exceptions.ConnectTimeout:
             pass
         return None
 
+    def _update_state(self, endpoint: str) -> None:
+        result = self._get_endpoint(endpoint)
+        if result is not None:
+            self._state.update(result)
+
     def update(self):
-        manual = self._get_endpoint(MANUAL)
-        if manual is not None:
-            self._state.update(manual)
-        auto = self._get_endpoint(AUTO)
-        if auto is not None:
-            self._state.update(auto)
+        self._update_state(MANUAL)
+        self._update_state(MODE)
 
     def _set_endpoint(self, endpoint: str, post: dict[str, Any]) -> dict[str, Any] | None:
         try:
-            r = requests.post(f"http://{self.host}/{endpoint}", json=post, timeout=10)
-            if r.status_code == 200:
+            r = requests.post(f"http://{self.host}/{endpoint}", json=post)
+            # we take any "successful" response code in the range 200-299
+            status_code = int(r.status_code / 100)
+            if status_code == 2:
                 return r.json()
+            print(f"_set_endpoint failure: {status_code} {r.text} on {post}")
         except requests.exceptions.ConnectTimeout:
             pass
         return None
 
-    def _set_state_values(self, values: dict[str, Any], endpoint: str):
-        state = self._state.copy()
+    def _set_state_values(self, values: dict[str, Any], endpoint: str, success_field: str, success_value: Any) -> None:
+        state = {k: v for k, v in self._state.items() if k in fields_mask[endpoint]}
         state.update(values)
         result = self._set_endpoint(endpoint, state)
-        if result is not None:
-            self._state.update(result)
+        if (result is not None) and (result[success_field] == success_value):
+            self._state.update(state)
+        else:
+            print(f"  failure, result: {result}")
+
+    def _set_state_values_manual(self, values: dict[str, Any]) -> None:
+        self._set_state_values(values, MANUAL, SUCCESS, True)
 
     @property
     def hw_model(self) -> str:
@@ -82,40 +103,41 @@ class RsLedApi:
         return self._state[BLUE]
 
     def set_blue(self, blue: int):
-        self._set_state_values({BLUE: blue}, MANUAL)
+        self._set_state_values_manual({BLUE: blue})
 
     @property
     def white(self) -> int:
         return self._state[WHITE]
 
     def set_white(self, white: int):
-        self._set_state_values({WHITE: white}, MANUAL)
+        self._set_state_values_manual({WHITE: white})
 
     @property
     def moon(self) -> int:
         return self._state[MOON]
 
     def set_moon(self, moon: int):
-        self._set_state_values({MOON: moon}, MANUAL)
+        self._set_state_values_manual({MOON: moon})
 
     @property
     def mode(self) -> int:
         return self._state[MODE]
 
     def reset_mode(self):
-        self._set_state_values({MODE: AUTO}, MODE)
+        self._set_state_values({MODE: AUTO}, MODE, MODE, AUTO)
+        self._update_state(MANUAL)
 
     def set_blue_white(self, blue: int, white: int):
-        self._set_state_values({BLUE: blue, WHITE: white}, MANUAL)
+        self._set_state_values_manual({BLUE: blue, WHITE: white})
 
     def set_max(self):
-        self._set_state_values({BLUE: 100, WHITE: 100}, MANUAL)
+        self._set_state_values_manual({BLUE: 100, WHITE: 100})
 
     def set_min(self):
-        self._set_state_values({BLUE: 0, WHITE: 0}, MANUAL)
+        self._set_state_values_manual({BLUE: 0, WHITE: 0})
 
     def set_off(self):
-        self._set_state_values({BLUE: 0, WHITE: 0, MOON: 0}, MANUAL)
+        self._set_state_values_manual({BLUE: 0, WHITE: 0, MOON: 0})
 
     @property
     def brightness(self) -> int:
@@ -131,12 +153,12 @@ class RsLedApi:
     def set_brightness(self, brightness: int):
         # set the blue/white components to the requested brightness setting
         y = self._normalized_bw(brightness)
-        self._set_state_values({BLUE: y[0], WHITE: y[1]}, MANUAL)
+        self._set_state_values_manual({BLUE: y[0], WHITE: y[1]})
 
     def normalize(self):
         # set the blue/white components to the brightest possible setting that maintains the color
         y = self._normalized_bw()
-        self._set_state_values({BLUE: y[0], WHITE: y[1]}, MANUAL)
+        self._set_state_values_manual({BLUE: y[0], WHITE: y[1]})
 
     @property
     def color_temperature(self) -> int:
@@ -161,7 +183,8 @@ class RsLedApi:
         return 0
 
     def set_color_temperature(self, color_temperature: int, brightness: int) -> None:
+        # set the color temperature in the range of the lights
         color_table = color_tables[self.hw_model]
         interpolated = interpolate(color_table, color_temperature)
         y = [int(clamp((y * brightness) / 100, 0, 100) + 0.5) for y in interpolated]
-        self._set_state_values({BLUE: y[0], WHITE: y[1]}, MANUAL)
+        self._set_state_values_manual({BLUE: y[0], WHITE: y[1]})
