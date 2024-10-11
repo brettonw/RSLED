@@ -100,32 +100,32 @@ class RsLedApi:
             self._state[MODE] = MANUAL
 
     @property
-    def hw_model(self) -> str:
-        return self._state[HW_MODEL]
+    def hw_model(self) -> str | None:
+        return self._state.get(HW_MODEL, None)
 
     @property
-    def blue(self) -> int:
+    def blue(self) -> int | None:
         return self._state[BLUE]
 
     def set_blue(self, blue: int):
         self._set_state_values_manual({BLUE: blue})
 
     @property
-    def white(self) -> int:
+    def white(self) -> int | None:
         return self._state[WHITE]
 
     def set_white(self, white: int):
         self._set_state_values_manual({WHITE: white})
 
     @property
-    def moon(self) -> int:
+    def moon(self) -> int | None:
         return self._state[MOON]
 
     def set_moon(self, moon: int):
         self._set_state_values_manual({MOON: moon})
 
     @property
-    def mode(self) -> int:
+    def mode(self) -> int | None:
         return self._state[MODE]
 
     def reset_mode(self):

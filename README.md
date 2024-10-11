@@ -12,8 +12,18 @@ Each ReefLED unit includes a "REEF-SPEC" blue light (a proprietary mix of blue L
 
 ## endpoints
 I used the [proxy](proxy) while performing manual settings in the app for my RSLED90 lights. I observed the following command endpoints available through HTTP (when you send the given payload in the POST body):
-### DEVICE_INFO
 
+### DEVICE_INFO
+This simply returns a structure giving information about the device. I need it for the hw_type and hw_model, to identify which light it is.
+```
+{
+    hw_type: "reef-lights",
+    hw_model: "RSLED90",
+    name: "RSLED90-xxxxxx",
+    status: "unpaired",
+    hwid: "xxxxxxxx"
+}
+```
 
 ### MANUAL
 This sets the lights to the requested color. The lights stay that color until the mode call is issued. It returns the same structure with two additional values: fan and temperature - but does not seem to respond to trying to set either of them (i.e. you can't turn the fan on and off). The light color parameters are a value between 0 and 100.

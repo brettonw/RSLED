@@ -4,10 +4,13 @@ from dataclasses import dataclass
 @dataclass
 class XYPair:
     x: float
-    y: list[float]
+    y: int | float | list[int | float]
     def __post_init__(self):
         if not isinstance(self.y, list):
             self.y = [self.y]
+        assert len(self.y) > 0
+        # ensure they are all floats for interpolation
+        self.y = [float(x) for x in self.y]
 
 
 def interpolate(table: list[XYPair], x: float) -> float | list[float]:
@@ -26,14 +29,15 @@ def interpolate(table: list[XYPair], x: float) -> float | list[float]:
         assert len(entry.y) == len(table[0].y)
 
     # a helper function to do the interpolation
-    def linear(high: int) -> list[float]:
+    def linear(high: int) -> float | list[float]:
         low = high - 1
         interpolant = (x - table[low].x) / (table[high].x - table[low].x)
         low_y = table[low].y
         high_y = table[high].y
 
         # apply the interpolation element-wise
-        return [low_val + ((high_val - low_val) * interpolant) for low_val, high_val in zip(low_y, high_y)]
+        interpolated = [low_val + ((high_val - low_val) * interpolant) for low_val, high_val in zip(low_y, high_y)]
+        return interpolated if len(interpolated) > 1 else interpolated[0]
 
     # if the requested value is outside the range of the table, we extrapolate from the two ends of
     # the table
