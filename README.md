@@ -1,3 +1,6 @@
+See https://github.com/Elwinmage/ha-reefbeat-component for a newer integration pulling all the Red Sea components into a local-only control scheme.
+
+
 <img src="img/logo.png">
 
 # RSLED
